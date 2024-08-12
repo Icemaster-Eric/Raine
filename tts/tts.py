@@ -38,6 +38,7 @@ class TTS:
         self.emotions = emotions
         self.emotion = list(emotions.values())[0]
 
+        # add caching for ref audio (?)
         self.pipeline.set_ref_audio(self.emotion[0])
 
         print(f"Loaded TTS in {time.time() - start_time:.2f}s")
