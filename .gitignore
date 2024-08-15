@@ -163,5 +163,4 @@ cython_debug/
 
 # project specific stuff
 tts/models/*
-gpt_sovits/*
 models/*
