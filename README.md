@@ -13,7 +13,7 @@ Using GPT-SoVITS for tts right now, but I might change to Parler TTS or CosyVoic
 
 ### TTS Usage Instructions
 
-Simply git clone this repo, cd into the tts folder and run `pip install -r requirements.txt`. An example is given below:
+Simply git clone this repo, cd into the tts folder and run `pip install -r requirements.txt`. Follow the instructions in the [gpt_sovits readme](gpt_sovits/README.md) to download the necessary weights/train your own tts. An example of using the tts is given below:
 
 ```python
 from tts import TTS
