@@ -28,6 +28,7 @@ class TTS:
             emotions: dict[str, tuple[str, str]],
             config_path: str = "gpt_sovits/GPT_SoVITS/configs/tts_infer.yaml",
     ):
+        # settings: top_k=15, top_p=0.85, temperature=0.9
         start_time = time.time()
 
         self.config = TTS_Config(config_path)

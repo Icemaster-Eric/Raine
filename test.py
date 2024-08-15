@@ -2,7 +2,7 @@
 def test_llm():
     from llm import Llama, prompts
 
-    llm_model = Llama("models/gemma-2-9b-it-8bpw")
+    llm_model = Llama("models/gemma-2-9b-it-sppo-8bpw")
 
     prompt = prompts.Gemma([
         {"role": "user", "content": "hello"}
@@ -38,7 +38,36 @@ def test_waifumem():
     return True
 
 
+def test_vts():
+    import pyvts
+    import asyncio
+
+    async def vts_func():
+        vts = pyvts.vts()
+
+        await vts.connect()
+
+        # authenticate
+        await vts.request_authenticate_token()
+        await vts.request_authenticate()
+
+        response_data = await vts.request(vts.vts_request.requestHotKeyList())
+
+        for hotkey in response_data['data']['availableHotkeys']:
+            print(hotkey)
+            request = vts.vts_request.requestTriggerHotKey(hotkey)
+            await vts.request(request)
+            break
+
+        await vts.close()
+
+        return True
+
+    return asyncio.run(vts_func())
+
+
 if __name__ == "__main__":
-    assert test_llm()
-    assert test_tts()
-    assert test_waifumem()
+    #assert test_llm()
+    #assert test_tts()
+    #assert test_waifumem()
+    assert test_vts()
