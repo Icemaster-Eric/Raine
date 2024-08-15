@@ -103,7 +103,7 @@ class VTS:
                     [param["value"] for param in self.parameters.values()],
                 )
 
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.3)
 
     def trigger(self, hotkey: int | dict) -> dict:
         """Triggers a hotkey.
