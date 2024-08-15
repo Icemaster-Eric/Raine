@@ -6,9 +6,14 @@ async def main():
     vts = VTS()
     await vts.connect()
 
-    for i in range(len(vts.hotkeys)):
-        await vts.trigger(i)
-        await asyncio.sleep(2)
+    print([p["name"] for p in vts.parameters])
+
+    while True:
+        param_name, value = input(": ").split()
+        value = float(value)
+
+        async with vts.vts_request():
+            await vts.set_parameter_value(param_name, value)
 
 
 if __name__ == "__main__":
