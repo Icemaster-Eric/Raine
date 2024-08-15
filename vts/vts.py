@@ -8,10 +8,11 @@ class VTS:
     def __init__(self):
         self.connected: bool = False
         self.vts = pyvts.vts()
-        self.hotkeys: list = [] # not initialized yet
+        self.hotkeys: list = []
         self.parameters: dict[str, dict[
             Literal["value", "min", "max", "defaultValue"], float
-        ]] = {} # (model is constantly set to these values) not initialized yet
+        ]] = {} # (change "value" to change the model's parameter values)
+        self.request_queue = asyncio.Queue()
 
     async def connect(self):
         await self.vts.connect()
@@ -22,17 +23,24 @@ class VTS:
         self.hotkeys = hotkey_data["data"]["availableHotkeys"]
 
         parameter_data = await self.vts.request(self.vts.vts_request.requestTrackingParameterList())
-        self.parameters = parameter_data["data"]["defaultParameters"]
+        self.parameters = {
+            param["name"]: {
+                "value": param["value"],
+                "defaultValue": param["defaultValue"],
+                "min": param["min"],
+                "max": param["max"]
+            } for param in parameter_data["data"]["defaultParameters"]
+        }
 
         await self.vts.close()
 
         self.connected = True
 
-        asyncio.create_task(self.send_parameters())
+        asyncio.create_task(self.send_requests())
 
     async def disconnect(self):
         if self.vts.get_connection_status():
-            self.vts.close()
+            await self.vts.close()
 
         self.hotkeys: list = []
         self.parameters = {}
@@ -54,32 +62,9 @@ class VTS:
         await self.vts.request_authenticate()
         yield
         await self.vts.close()
-    
-    async def set_parameter_value(self, parameter: str, value: float, weight: float = 1, face_found: bool = False, mode: str = "set") -> dict:
-        """Set a parameter to a specific value.
-
-        Args:
-            parameter (str): Name of the parameter.
-            value (float): Value of the data, [-1000000, 1000000]
-            weight (float, optional): You can mix the your value with vts face tracking parameter, from 0 to 1. Defaults to 1.
-            face_found (bool, optional): if true, you will tell VTubeStudio to consider the user face as found, s.t. you can control when the "tracking lost". Defaults to False.
-            mode (str, optional): Defaults to "set".
-
-        Returns:
-            dict: Vtube Studio API Response
-        """
-        return await self.vts.request(
-            self.vts.vts_request.requestSetParameterValue(
-                parameter,
-                value,
-                weight,
-                face_found,
-                mode
-            )
-        )
 
     async def set_parameter_values(self, parameters: list[str], values: list[float], weights: list[float] | float = 1, face_found: bool = False, mode: str = "set") -> dict:
-        """Set a parameter to a specific value.
+        """Set a list of parameters to specific values.
 
         Args:
             parameters (list[str]): Name of the parameter.
@@ -101,21 +86,26 @@ class VTS:
             )
         )
 
-    async def send_parameters(self):
+    async def send_requests(self):
         """Constantly sends requests to vtube studio to keep the model at the current parameters.
 
         Stops when the connected property is set to False.
         """
-        while self.connected:
-            async with self.vts_request():
+        async with self.vts_request():
+            while self.connected:
+                while not self.request_queue.empty():
+                    request = self.request_queue.get_nowait()
+
+                    await self.vts.request(request)
+
                 await self.set_parameter_values(
                     [param_name for param_name in self.parameters.keys()],
                     [param["value"] for param in self.parameters.values()],
                 )
 
-            await asyncio.sleep(0.5)
+                await asyncio.sleep(0.5)
 
-    async def trigger(self, hotkey: int | dict) -> dict:
+    def trigger(self, hotkey: int | dict) -> dict:
         """Triggers a hotkey.
 
         Args:
@@ -124,4 +114,4 @@ class VTS:
         if isinstance(hotkey, int):
             hotkey = self.hotkeys[hotkey]["name"]
 
-        return await self.vts.request(self.vts.vts_request.requestTriggerHotKey(hotkey))
+        self.request_queue.put_nowait(self.vts.vts_request.requestTriggerHotKey(hotkey))

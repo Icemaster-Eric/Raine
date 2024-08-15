@@ -6,14 +6,16 @@ async def main():
     vts = VTS()
     await vts.connect()
 
-    print([p["name"] for p in vts.parameters])
+    print([p for p in vts.parameters])
 
-    while True:
-        param_name, value = input(": ").split()
-        value = float(value)
+    vts.parameters["MouthSmile"]["value"] = 1
+    vts.parameters["MouthOpen"]["value"] = 1
 
-        async with vts.vts_request():
-            await vts.set_parameter_value(param_name, value)
+    vts.trigger(4)
+
+    await asyncio.sleep(5)
+
+    await vts.disconnect()
 
 
 if __name__ == "__main__":
