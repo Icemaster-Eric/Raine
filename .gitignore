@@ -162,5 +162,5 @@ cython_debug/
 #.idea/
 
 # project specific stuff
-tts/models/*
+tts/ref_audio/*
 models/*

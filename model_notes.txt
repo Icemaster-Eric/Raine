@@ -1,0 +1,9 @@
+FaceAngleX: Face left/right
+FaceAngleY: Face up/down
+FaceAngleZ: Face rotation in z axis
+MouthSmile: How "happy" the model is (doesn't just affect the mouth)
+MouthOpen: How open the mouth is
+Brows: Brow Y
+EyeOpenLeft, EyeOpenRight: How open each eye is
+EyeRightX: Eye left/right
+EyeRightY: Eye up/down

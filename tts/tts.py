@@ -3,6 +3,14 @@ import wave
 from io import BytesIO
 import sounddevice as sd
 import soundfile as sf
+
+import os
+import sys
+
+now_dir = os.getcwd()
+sys.path.append(f"{now_dir}/gpt_sovits")
+sys.path.append(f"{now_dir}/gpt_sovits/GPT_SoVITS")
+
 from gpt_sovits.GPT_SoVITS.TTS_infer_pack.TTS import TTS as TTS_Pipeline
 from gpt_sovits.GPT_SoVITS.TTS_infer_pack.TTS import TTS_Config
 
@@ -50,14 +58,15 @@ class TTS:
     def infer(
             self,
             text: str,
-            emotion: str,
+            emotion: str | None = None,
             top_k: int = 5,
             top_p: float = 1,
             temp: float = 0.75,
             rep_pen: float = 1.02,
     ):
-        if self.emotions[emotion] != self.emotion:
-            self.emotion = self.emotions[emotion]
+        if emotion:
+            if self.emotions[emotion] != self.emotion:
+                self.emotion = self.emotions[emotion]
 
         ref_audio_path, ref_text = self.emotion
 

@@ -8,7 +8,9 @@ class VTS:
     def __init__(self):
         self.connected: bool = False
         self.vts = pyvts.vts()
-        self.hotkeys: list = []
+        self.hotkeys: list[dict[
+            Literal["name", "type", "description", "file", "hotkeyID", "keyCombination", "onScreenButtonID"], str | int | list
+        ]] = []
         self.parameters: dict[str, dict[
             Literal["value", "min", "max", "defaultValue"], float
         ]] = {} # (change "value" to change the model's parameter values)
@@ -25,7 +27,7 @@ class VTS:
         parameter_data = await self.vts.request(self.vts.vts_request.requestTrackingParameterList())
         self.parameters = {
             param["name"]: {
-                "value": param["value"],
+                "value": param["defaultValue"], # initialize values with default
                 "defaultValue": param["defaultValue"],
                 "min": param["min"],
                 "max": param["max"]
