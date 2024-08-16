@@ -1,7 +1,9 @@
 from io import BytesIO
 import aiohttp
-from tqdm import tqdm
+from tqdm.asyncio import tqdm
 import soundfile as sf
+import numpy as np
+from scipy.ndimage import uniform_filter1d
 
 
 class TTS:
@@ -12,6 +14,9 @@ class TTS:
         self.emotions = emotions
         self.emotion = None
         self.session = aiohttp.ClientSession(base_url="http://127.0.0.1:9880")
+    
+    async def close(self):
+        await self.session.close()
 
     async def set_emotion(self, emotion: str):
         self.emotion = emotion
@@ -41,29 +46,38 @@ class TTS:
         }) as resp:
             current_text = None
 
-            i = 0
-            complete_chunk = b""
-            async for chunk in resp.content.iter_chunks():
+            audio_bytes = b""
+            async for chunk in tqdm(resp.content.iter_chunks(), "TTS"):
                 chunk, complete = chunk
 
                 try:
                     current_text = chunk.decode()
-                    print("decoded:", current_text)
                     if current_text != "":
                         continue
                 except UnicodeDecodeError:
                     pass
 
+                audio_bytes += chunk
+
                 if not complete:
-                    complete_chunk += chunk
                     continue
 
-                audio_data = sf.read(BytesIO(complete_chunk))
-                yield {
-                    "data": audio_data[0],
-                    "samplerate": audio_data[1],
-                    "text": current_text
-                }
+                try:
+                    audio = sf.SoundFile(BytesIO(audio_bytes))
+                    audio_array = audio.read()
 
-                i += 1
-                complete_chunk = b""
+                    arr = uniform_filter1d(audio_array[::1000].copy(), size=10)
+                    arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))
+
+                    yield {
+                        "data": audio.read(),
+                        "sample_rate": audio.samplerate,
+                        "duration": audio.frames / audio.samplerate,
+                        "text": current_text,
+                        "volume_data": arr,
+                    }
+
+                    audio_bytes = b""
+                except sf.LibsndfileError as e:
+                    if "\n" in text:
+                        raise e
