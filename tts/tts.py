@@ -1,8 +1,7 @@
 from io import BytesIO
-import requests
+import aiohttp
 from tqdm import tqdm
-from soundfile import read as sf_read
-from sounddevice import play, wait
+import soundfile as sf
 
 
 class TTS:
@@ -11,38 +10,60 @@ class TTS:
             emotions: dict[str, tuple[str, str]],
     ):
         self.emotions = emotions
-        self.emotion = list(emotions.keys())[0]
-        self.set_emotion(self.emotion)
+        self.emotion = None
+        self.session = aiohttp.ClientSession(base_url="http://127.0.0.1:9880")
 
-    def set_emotion(self, emotion: str):
+    async def set_emotion(self, emotion: str):
         self.emotion = emotion
 
-        requests.get("http://127.0.0.1:9880/change_refer", params={
+        async with self.session.get("/change_refer", params={
             "refer_wav_path": self.emotions[emotion][0],
             "prompt_text": self.emotions[emotion][1],
             "prompt_language": "en"
-        })
+        }) as resp:
+            await resp.wait_for_close()
 
-    def infer(
+    async def infer(
             self,
             text: str,
             emotion: str | None = None,
     ):
         if emotion:
             if emotion != self.emotion:
-                self.set_emotion(emotion)
+                await self.set_emotion(emotion)
 
-        response = requests.get("http://127.0.0.1:9880/", params={
+        elif self.emotion is None:
+            await self.set_emotion(list(self.emotions.keys())[0])
+
+        async with self.session.get("/", params={
             "text": text,
             "text_language": "en"
-        }, stream=True)
+        }) as resp:
+            current_text = None
 
-        for i, chunk in tqdm(enumerate(response.iter_content(chunk_size=5292000)), "GPT-SoVITS"): # chunk size is *supposed* to be 30 seconds of wav file data
-            if i % 2:
-                #audio_data = 
-                play(*sf_read(BytesIO(chunk)))
-                wait()
-            else:
-                text = chunk.decode("utf-8")
+            i = 0
+            complete_chunk = b""
+            async for chunk in resp.content.iter_chunks():
+                chunk, complete = chunk
 
-        yield "hi", "hello"
+                try:
+                    current_text = chunk.decode()
+                    print("decoded:", current_text)
+                    if current_text != "":
+                        continue
+                except UnicodeDecodeError:
+                    pass
+
+                if not complete:
+                    complete_chunk += chunk
+                    continue
+
+                audio_data = sf.read(BytesIO(complete_chunk))
+                yield {
+                    "data": audio_data[0],
+                    "samplerate": audio_data[1],
+                    "text": current_text
+                }
+
+                i += 1
+                complete_chunk = b""

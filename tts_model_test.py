@@ -1,4 +1,5 @@
 import asyncio
+import sounddevice as sd
 from vts import VTS
 from tts import TTS
 
@@ -12,9 +13,15 @@ async def main():
             ),
         }
     )
+    await tts.set_emotion("smug")
 
-    for audio, text in tts.infer("ok so now I can start working on syncing audio output from the tts to the mouthOpen parameter"):
-        pass
+    async for chunk in tts.infer("""You often want to send some sort of data in the URL’s query string.
+If you were constructing the URL by hand, this data would be given as key/value pairs in the URL after a question mark, e.g. httpbin.org/get?key=val.
+Requests allows you to provide these arguments as a dictionary of strings, using the params keyword argument.
+As an example, if you wanted to pass key1=value1 and key2=value2 to httpbin.org/get, you would use the following code:"""):
+        sd.play(chunk["data"], chunk["samplerate"])
+        print(chunk["text"])
+        sd.wait()
 
     return
 
