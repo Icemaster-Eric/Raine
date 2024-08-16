@@ -5,10 +5,13 @@ from tts import TTS
 
 async def main():
     tts = TTS(
-        "models/raine-tts/Raine GPT-SoVITS v1_e15_s165.pth",
-        "models/raine-tts/Raine GPT-SoVITS v1-e18.ckpt",
+        "gpt_sovits/GPT_weights/Raine GPT-SoVITS v1_e15_s165.pth",
+        "gpt_sovits/SoVITS_weights/Raine GPT-SoVITS v1-e18.ckpt",
         {
-            "smug": "tts/ref_audio/smug.wav",
+            "smug": (
+                "tts/ref_audio/smug.wav",
+                "Free from social mores and other people's opinions, and no family obligations. Hmph, must be an easy life."
+            ),
         }
     )
 
