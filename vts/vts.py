@@ -113,7 +113,7 @@ class VTS:
                     self.previous_parameters = deepcopy(self.parameters)
                     self.previous_request = time()
 
-                await asyncio.sleep(0.05)
+                await asyncio.sleep(0.01)
 
     def trigger(self, hotkey: int | dict) -> dict:
         """Triggers a hotkey.

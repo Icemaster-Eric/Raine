@@ -18,8 +18,9 @@ async def main():
     vts = VTS()
     await vts.connect()
 
-    vts.parameters["EyeOpenLeft"]["value"] = 1
-    vts.parameters["EyeOpenRight"]["value"] = 1
+    vts.parameters["EyeOpenLeft"]["value"] = 0.7
+    vts.parameters["EyeOpenRight"]["value"] = 0.7
+    vts.parameters["MouthSmile"]["value"] = 0.6
 
     async for chunk in tts.infer("Hi, I'm Raine, your favorite Ay I veetuber!\nHello everyone, thanks for joining the stream today!\nIt really means a lot to me."):
         sd.play(chunk["data"], chunk["sample_rate"])
@@ -27,9 +28,11 @@ async def main():
         for volume_level in chunk["volume_data"]:
             vts.parameters["MouthOpen"]["value"] = volume_level
 
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
-        await asyncio.sleep(0.5)
+        vts.parameters["MouthOpen"]["value"] = 0
+
+        await asyncio.sleep(0.3)
 
     await tts.close()
     await vts.disconnect()

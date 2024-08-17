@@ -5,6 +5,7 @@ from tqdm.asyncio import tqdm
 import soundfile as sf
 import numpy as np
 from scipy.signal import resample
+from scipy.ndimage import uniform_filter1d
 
 
 class TTS:
@@ -69,10 +70,11 @@ class TTS:
                     duration = audio.frames / audio.samplerate
 
                     audio_array = audio.read()
-                    volume_array = resample(audio_array, floor(duration * 10))
-                    min_volume = np.min(volume_array)
-                    max_volume = np.max(volume_array)
-                    volume_array = (volume_array - min_volume) / (max_volume - min_volume) 
+                    volume_array = resample(
+                        uniform_filter1d(audio_array, 4000),
+                        floor(duration * 200)
+                    )[::10]
+                    volume_array = np.interp(volume_array, (volume_array.min(), volume_array.max()), (0.27, 0.5))
 
                     yield {
                         "data": audio_array,
