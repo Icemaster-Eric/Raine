@@ -92,7 +92,7 @@ class VTS:
             )
         )
 
-    async def send_requests(self):
+    async def send_requests(self): # very unoptimized code, refactor this later
         """Constantly sends requests to vtube studio to keep the model at the current parameters.
 
         Stops when the connected property is set to False.
@@ -113,7 +113,7 @@ class VTS:
                     self.previous_parameters = deepcopy(self.parameters)
                     self.previous_request = time()
 
-                await asyncio.sleep(0.01)
+                await asyncio.sleep(0.02)
 
     def trigger(self, hotkey: int | dict) -> dict:
         """Triggers a hotkey.

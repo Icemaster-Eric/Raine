@@ -71,7 +71,7 @@ class TTS:
 
                     audio_array = audio.read()
                     volume_array = resample(
-                        uniform_filter1d(audio_array, 4000),
+                        uniform_filter1d(audio_array, 3700),
                         floor(duration * 200)
                     )[::10]
                     volume_array = np.interp(volume_array, (volume_array.min(), volume_array.max()), (0.27, 0.5))
