@@ -1,4 +1,6 @@
 from typing import Literal
+from time import time
+from copy import deepcopy
 from contextlib import asynccontextmanager
 import asyncio
 import pyvts
@@ -14,6 +16,8 @@ class VTS:
         self.parameters: dict[str, dict[
             Literal["value", "min", "max", "defaultValue"], float
         ]] = {} # (change "value" to change the model's parameter values)
+        self.previous_parameters = None
+        self.previous_request = time()
         self.request_queue = asyncio.Queue()
 
     async def connect(self):
@@ -100,12 +104,16 @@ class VTS:
 
                     await self.vts.request(request)
 
-                await self.set_parameter_values(
-                    [param_name for param_name in self.parameters.keys()],
-                    [param["value"] for param in self.parameters.values()],
-                )
+                if self.parameters != self.previous_parameters or time() - self.previous_request > 0.8:
+                    await self.set_parameter_values(
+                        [param_name for param_name in self.parameters.keys()],
+                        [param["value"] for param in self.parameters.values()],
+                    )
 
-                await asyncio.sleep(0.3)
+                    self.previous_parameters = deepcopy(self.parameters)
+                    self.previous_request = time()
+
+                await asyncio.sleep(0.05)
 
     def trigger(self, hotkey: int | dict) -> dict:
         """Triggers a hotkey.

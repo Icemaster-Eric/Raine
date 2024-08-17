@@ -1,9 +1,10 @@
 from io import BytesIO
+from math import floor
 import aiohttp
 from tqdm.asyncio import tqdm
 import soundfile as sf
 import numpy as np
-from scipy.ndimage import uniform_filter1d
+from scipy.signal import resample
 
 
 class TTS:
@@ -64,23 +65,21 @@ class TTS:
 
                 try:
                     audio = sf.SoundFile(BytesIO(audio_bytes))
+
+                    duration = audio.frames / audio.samplerate
+
                     audio_array = audio.read()
-
-                    chunk_n = 10
-                    chunk_size = audio_array.size / chunk_n
-
-                    for sub_arr in audio_array.reshape((int(chunk_size / 2), 2)):
-                        np.sqrt(sub_arr.dot(sub_arr)/sub_arr.size)
-
-                    arr = uniform_filter1d(audio_array[::1000].copy(), size=10)
-                    arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))
+                    volume_array = resample(audio_array, floor(duration * 10))
+                    min_volume = np.min(volume_array)
+                    max_volume = np.max(volume_array)
+                    volume_array = (volume_array - min_volume) / (max_volume - min_volume) 
 
                     yield {
-                        "data": audio.read(),
+                        "data": audio_array,
                         "sample_rate": audio.samplerate,
-                        "duration": audio.frames / audio.samplerate,
+                        "duration": duration,
                         "text": current_text,
-                        "volume_data": arr,
+                        "volume_data": volume_array, # volume level from 0-1 every 0.1s
                     }
 
                     audio_bytes = b""

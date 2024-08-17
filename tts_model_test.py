@@ -2,7 +2,6 @@ import asyncio
 import sounddevice as sd
 from vts import VTS
 from tts import TTS
-import numpy as np
 
 
 async def main():
@@ -16,20 +15,23 @@ async def main():
     )
     await tts.set_emotion("default")
 
+    vts = VTS()
+    await vts.connect()
+
+    vts.parameters["EyeOpenLeft"]["value"] = 1
+    vts.parameters["EyeOpenRight"]["value"] = 1
+
     async for chunk in tts.infer("Hi, I'm Raine, your favorite Ay I veetuber!\nHello everyone, thanks for joining the stream today!\nIt really means a lot to me."):
-        #sd.play(chunk["data"], chunk["sample_rate"])
-        #test = np.array([1, 2, 3]).shape
-        print(chunk["volume_data"])
+        sd.play(chunk["data"], chunk["sample_rate"])
+
+        for volume_level in chunk["volume_data"]:
+            vts.parameters["MouthOpen"]["value"] = volume_level
+
+            await asyncio.sleep(0.1)
 
         await asyncio.sleep(0.5)
 
     await tts.close()
-
-    return
-
-    vts = VTS()
-    await vts.connect()
-
     await vts.disconnect()
 
 
