@@ -1,6 +1,7 @@
 import asyncio
 import math
 import json
+from random import randint
 import sounddevice as sd
 from vts import VTS
 from tts import TTS
@@ -13,8 +14,7 @@ def sway_movement():
         time = i * 0.05
         value = 10 * math.sin((time * math.pi))
 
-        sway.append({"FaceAngleZ": value})
-        sway.append({"FaceAngleX": value / 2})
+        sway.append({"FaceAngleZ": value, "FaceAngleX": value / 2})
 
     return sway
 
@@ -24,7 +24,7 @@ def nod_movement():
 
     for i in range(60):
         time = i * 0.05
-        value = 20 * math.sin((time * math.pi)) - 10
+        value = 20 * math.sin((time * math.pi))
 
         nod.append({"FaceAngleY": value})
 
@@ -43,6 +43,18 @@ def shake_movement():
     return shake
 
 
+def blink_movement():
+    blink = []
+
+    for i in range(1, 6):
+        time = i * 0.05
+        value = 0.4 * math.cos(time * math.pi * 8) + 0.3
+
+        blink.append({"EyeOpenLeft": value, "EyeOpenRight": value})
+
+    return blink
+
+
 with open("vts/movements/sway.json", "w") as f:
     json.dump(sway_movement(), f)
 
@@ -51,6 +63,9 @@ with open("vts/movements/nod.json", "w") as f:
 
 with open("vts/movements/shake.json", "w") as f:
     json.dump(shake_movement(), f)
+
+with open("vts/movements/blink.json", "w") as f:
+    json.dump(blink_movement(), f)
 
 
 def get_movements():
@@ -65,6 +80,9 @@ def get_movements():
     with open("vts/movements/shake.json", "r") as f:
         movements["shake"] = json.load(f)
 
+    with open("vts/movements/blink.json", "r") as f:
+        movements["blink"] = json.load(f)
+
     return movements
 
 
@@ -76,6 +94,18 @@ async def move(vts: VTS, movement_data: list[dict]):
         await asyncio.sleep(0.05)
 
     # return model to original parameters?
+
+
+async def blink(vts: VTS, movement_data: list[dict]):
+    while True:
+        for move in movement_data:
+            for param_name, value in move.items():
+                vts.parameters[param_name]["value"] = value
+
+            await asyncio.sleep(0.05)
+
+        #await asyncio.sleep(randint(35, 43) / 10)
+        await asyncio.sleep(1.8)
 
 
 async def main():
@@ -98,7 +128,7 @@ async def main():
     vts.parameters["EyeOpenRight"]["value"] = 0.7
     vts.parameters["MouthSmile"]["value"] = 0.4
 
-    #asyncio.create_task(move(vts, movements["sway"]))
+    asyncio.create_task(blink(vts, movements["blink"]))
 
     """async for chunk in tts.infer("Hi, I'm Raine, your favorite Ay I veetuber!\nHello everyone, thanks for joining the stream today!\nIt really means a lot to me."):
         sd.play(chunk["data"], chunk["sample_rate"])
