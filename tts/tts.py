@@ -66,6 +66,12 @@ class TTS:
                     audio = sf.SoundFile(BytesIO(audio_bytes))
                     audio_array = audio.read()
 
+                    chunk_n = 10
+                    chunk_size = audio_array.size / chunk_n
+
+                    for sub_arr in audio_array.reshape((int(chunk_size / 2), 2)):
+                        np.sqrt(sub_arr.dot(sub_arr)/sub_arr.size)
+
                     arr = uniform_filter1d(audio_array[::1000].copy(), size=10)
                     arr = (arr - np.min(arr)) / (np.max(arr) - np.min(arr))
 
