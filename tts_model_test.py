@@ -7,65 +7,20 @@ from vts import VTS
 from tts import TTS
 
 
-def sway_movement():
-    sway = []
+def calc_movement():
+    movement = []
 
     for i in range(60):
         time = i * 0.05
-        value = 10 * math.sin((time * math.pi))
+        value = time
 
-        sway.append({"FaceAngleZ": value, "FaceAngleX": value / 2})
+        movement.append({})
 
-    return sway
-
-
-def nod_movement():
-    nod = []
-
-    for i in range(60):
-        time = i * 0.05
-        value = 20 * math.sin((time * math.pi))
-
-        nod.append({"FaceAngleY": value})
-
-    return nod
+    return movement
 
 
-def shake_movement():
-    shake = []
-
-    for i in range(60):
-        time = i * 0.05
-        value = 15 * math.sin((time * math.pi) * 1.7)
-
-        shake.append({"FaceAngleX": value})
-
-    return shake
-
-
-def blink_movement():
-    blink = []
-
-    for i in range(1, 6):
-        time = i * 0.05
-        value = 0.4 * math.cos(time * math.pi * 8) + 0.3
-
-        blink.append({"EyeOpenLeft": value, "EyeOpenRight": value})
-
-    return blink
-
-
-with open("vts/movements/sway.json", "w") as f:
-    json.dump(sway_movement(), f)
-
-with open("vts/movements/nod.json", "w") as f:
-    json.dump(nod_movement(), f)
-
-with open("vts/movements/shake.json", "w") as f:
-    json.dump(shake_movement(), f)
-
-with open("vts/movements/blink.json", "w") as f:
-    json.dump(blink_movement(), f)
+with open("vts/movements/new.json", "w") as f:
+    json.dump(calc_movement(), f)
 
 
 def get_movements():
