@@ -38,27 +38,38 @@ async def blink_animation(vts: VTS, movement_data: list[dict]):
 
 
 async def head_animation(vts: VTS):
+    # the way I implemented this is probably really silly and trash but whatever, it *should* work
+    bias = -0.3 # -1 = always left, 1 = always right
+
     while True:
-        direction = "left" if randint(0, 1) else "right" # change this to be smarter
+        direction = "left" if bias + randint(-10, 10) / 10 < 0 else "right"
 
         for i in range(randint(10, 15)):
             if direction == "left":
-                if vts.parameters["FaceAngleX"]["value"] > 15:
+                if vts.parameters["FaceAngleX"]["value"] > 12:
                     direction = "right"
 
-                vts.parameters["FaceAngleX"]["value"] = vts.parameters["FaceAngleX"]["value"] + randint(5, 10) / 10
+                vts.parameters["FaceAngleX"]["value"] += randint(5, 10) / 10
 
             elif direction == "right":
-                if vts.parameters["FaceAngleX"]["value"] < -15:
+                if vts.parameters["FaceAngleX"]["value"] < -12:
                     direction = "left"
 
-                vts.parameters["FaceAngleX"]["value"] = vts.parameters["FaceAngleX"]["value"] - randint(5, 10) / 10
+                vts.parameters["FaceAngleX"]["value"] -= randint(5, 10) / 10
 
-            # add support for y/z movement and constant, natural adjustments
+            # small z movement
+            if vts.parameters["FaceAngleZ"]["value"] > 3:
+                vts.parameters["FaceAngleZ"]["value"] -= randint(0, 10) / 5
+
+            elif vts.parameters["FaceAngleZ"]["value"] < -3:
+                vts.parameters["FaceAngleZ"]["value"] += randint(0, 10) / 5
+
+            else:
+                vts.parameters["FaceAngleZ"]["value"] += randint(-10, 10) / 5
 
             await asyncio.sleep(0.05)
 
-        await asyncio.sleep(randint(4, 8))
+        await asyncio.sleep(randint(1, 3))
 
 
 async def main():
