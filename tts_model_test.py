@@ -39,6 +39,8 @@ async def blink_animation(vts: VTS, movement_data: list[dict]):
 
 async def head_animation(vts: VTS):
     while True:
+        await asyncio.sleep(randint(2, 4))
+
         for i in range(40):
             time = i * 0.05
             value = 12 * math.sin(time * math.pi)
@@ -59,7 +61,7 @@ async def main():
     )
     await tts.set_emotion("default")
 
-    """movements = get_movements()
+    movements = get_movements()
 
     vts = VTS()
     await vts.connect()
@@ -69,28 +71,22 @@ async def main():
     vts.parameters["MouthSmile"]["value"] = 0.4
 
     asyncio.create_task(blink_animation(vts, movements["blink"]))
-    asyncio.create_task(head_animation(vts))"""
+    asyncio.create_task(head_animation(vts))
 
     async for chunk in tts.infer("""Love looks not with the eyes, but with the mind
 And therefore is wing'd Cupid painted blind.
-Nor hath love's mind of any judgment taste
-Wings and no eyes figure unheedy haste: And therefore is love said to be a child, Because in choice he is so oft beguil'd.
-Be not afraid of greatness. Some are born great, some achieve greatness, and others have greatness thrust upon them."""):
+Nor hath love's mind of any judgment taste"""):
         sd.play(chunk["data"], chunk["sample_rate"])
 
         for i, volume_level in enumerate(chunk["volume_data"]):
-            #vts.parameters["MouthOpen"]["value"] = volume_level
+            vts.parameters["MouthOpen"]["value"] = volume_level
 
             await asyncio.sleep(0.05)
 
-        #vts.parameters["MouthOpen"]["value"] = 0
-
-        await asyncio.sleep(0.3)
-        sd.wait()
-        print(chunk["text"])
+        vts.parameters["MouthOpen"]["value"] = 0
 
     await tts.close()
-    #await vts.disconnect()
+    await vts.disconnect()
 
 
 if __name__ == "__main__":

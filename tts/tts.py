@@ -74,7 +74,7 @@ class TTS:
                         uniform_filter1d(audio_array, 3500),
                         floor(duration * 200)
                     )[::10]
-                    volume_array = np.interp(volume_array, (volume_array.min(), volume_array.max()), (0.23, 0.65))
+                    volume_array = np.interp(volume_array, (volume_array.min(), volume_array.max()), (0.23, 0.55))
 
                     yield {
                         "data": audio_array,
