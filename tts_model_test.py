@@ -38,38 +38,14 @@ async def blink_animation(vts: VTS, movement_data: list[dict]):
 
 
 async def head_animation(vts: VTS):
-    # the way I implemented this is probably really silly and trash but whatever, it *should* work
-    bias = -0.3 # -1 = always left, 1 = always right
-
     while True:
-        direction = "left" if bias + randint(-10, 10) / 10 < 0 else "right"
+        for i in range(40):
+            time = i * 0.05
+            value = 12 * math.sin(time * math.pi)
 
-        for i in range(randint(10, 15)):
-            if direction == "left":
-                if vts.parameters["FaceAngleX"]["value"] > 12:
-                    direction = "right"
-
-                vts.parameters["FaceAngleX"]["value"] += randint(5, 10) / 10
-
-            elif direction == "right":
-                if vts.parameters["FaceAngleX"]["value"] < -12:
-                    direction = "left"
-
-                vts.parameters["FaceAngleX"]["value"] -= randint(5, 10) / 10
-
-            # small z movement
-            if vts.parameters["FaceAngleZ"]["value"] > 3:
-                vts.parameters["FaceAngleZ"]["value"] -= randint(0, 10) / 5
-
-            elif vts.parameters["FaceAngleZ"]["value"] < -3:
-                vts.parameters["FaceAngleZ"]["value"] += randint(0, 10) / 5
-
-            else:
-                vts.parameters["FaceAngleZ"]["value"] += randint(-10, 10) / 5
+            vts.parameters["FaceAngleZ"]["value"] = value
 
             await asyncio.sleep(0.05)
-
-        await asyncio.sleep(randint(1, 3))
 
 
 async def main():
@@ -83,7 +59,7 @@ async def main():
     )
     await tts.set_emotion("default")
 
-    movements = get_movements()
+    """movements = get_movements()
 
     vts = VTS()
     await vts.connect()
@@ -93,33 +69,28 @@ async def main():
     vts.parameters["MouthSmile"]["value"] = 0.4
 
     asyncio.create_task(blink_animation(vts, movements["blink"]))
-    asyncio.create_task(head_animation(vts))
+    asyncio.create_task(head_animation(vts))"""
 
-    async for chunk in tts.infer("""Yoh, now why might you be looking for me, hm?
-Oh, you didn't know? I'm the 77th Director of the Wangsheng Funeral Parlor, Hu Tao.
-Though by the looks of you... Radiant glow, healthy posture...
-Yes, you're definitely here for something other than that which falls within my regular line of work, aren't you?
-Wanna come over for tea?
-One client, two clients, three clients!
-When the sun's out, bathe in sunlight. But when the moon's out, bathe in moonlight~
-Lemme show you some fire tricks. First... Fire! And then... Whoosh! Fire butterfly! Be free!
-Run around all you like during the day, but you should be careful during the night.
-When I'm not around, best keep your wits about you.
-Fighting's a pain. For me, it's not an objective so much as a means to an end.
-Using the means to reach the end, to fight for that which I will not compromise on — it's in this way that you and I are the same."""):
-        #sd.play(chunk["data"], chunk["sample_rate"])
+    async for chunk in tts.infer("""Love looks not with the eyes, but with the mind
+And therefore is wing'd Cupid painted blind.
+Nor hath love's mind of any judgment taste
+Wings and no eyes figure unheedy haste: And therefore is love said to be a child, Because in choice he is so oft beguil'd.
+Be not afraid of greatness. Some are born great, some achieve greatness, and others have greatness thrust upon them."""):
+        sd.play(chunk["data"], chunk["sample_rate"])
 
-        for volume_level in chunk["volume_data"]:
-            vts.parameters["MouthOpen"]["value"] = volume_level
+        for i, volume_level in enumerate(chunk["volume_data"]):
+            #vts.parameters["MouthOpen"]["value"] = volume_level
 
             await asyncio.sleep(0.05)
 
-        vts.parameters["MouthOpen"]["value"] = 0
+        #vts.parameters["MouthOpen"]["value"] = 0
 
         await asyncio.sleep(0.3)
+        sd.wait()
+        print(chunk["text"])
 
     await tts.close()
-    await vts.disconnect()
+    #await vts.disconnect()
 
 
 if __name__ == "__main__":
