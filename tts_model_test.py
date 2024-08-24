@@ -7,33 +7,8 @@ from vts import VTS
 from tts import TTS
 
 
-def calc_movement():
-    movement = []
-
-    for i in range(60):
-        time = i * 0.05
-        value = time
-
-        movement.append({})
-
-    return movement
-
-
-with open("vts/movements/new.json", "w") as f:
-    json.dump(calc_movement(), f)
-
-
 def get_movements():
     movements = {}
-
-    with open("vts/movements/sway.json", "r") as f:
-        movements["sway"] = json.load(f)
-
-    with open("vts/movements/nod.json", "r") as f:
-        movements["nod"] = json.load(f)
-
-    with open("vts/movements/shake.json", "r") as f:
-        movements["shake"] = json.load(f)
 
     with open("vts/movements/blink.json", "r") as f:
         movements["blink"] = json.load(f)
@@ -51,7 +26,7 @@ async def move(vts: VTS, movement_data: list[dict]):
     # return model to original parameters?
 
 
-async def blink(vts: VTS, movement_data: list[dict]):
+async def blink_animation(vts: VTS, movement_data: list[dict]):
     while True:
         for move in movement_data:
             for param_name, value in move.items():
@@ -59,12 +34,35 @@ async def blink(vts: VTS, movement_data: list[dict]):
 
             await asyncio.sleep(0.05)
 
-        #await asyncio.sleep(randint(35, 43) / 10)
-        await asyncio.sleep(1.8)
+        await asyncio.sleep(randint(35, 43) / 10)
+
+
+async def head_animation(vts: VTS):
+    while True:
+        direction = "left" if randint(0, 1) else "right" # change this to be smarter
+
+        for i in range(randint(10, 15)):
+            if direction == "left":
+                if vts.parameters["FaceAngleX"]["value"] > 15:
+                    direction = "right"
+
+                vts.parameters["FaceAngleX"]["value"] = vts.parameters["FaceAngleX"]["value"] + randint(5, 10) / 10
+
+            elif direction == "right":
+                if vts.parameters["FaceAngleX"]["value"] < -15:
+                    direction = "left"
+
+                vts.parameters["FaceAngleX"]["value"] = vts.parameters["FaceAngleX"]["value"] - randint(5, 10) / 10
+
+            # add support for y/z movement and constant, natural adjustments
+
+            await asyncio.sleep(0.05)
+
+        await asyncio.sleep(randint(4, 8))
 
 
 async def main():
-    """tts = TTS(
+    tts = TTS(
         {
             "default": (
                 "E:/Code/Raine/tts/ref_audio/smug.wav",
@@ -72,7 +70,7 @@ async def main():
             ),
         }
     )
-    await tts.set_emotion("default")"""
+    await tts.set_emotion("default")
 
     movements = get_movements()
 
@@ -83,10 +81,22 @@ async def main():
     vts.parameters["EyeOpenRight"]["value"] = 0.7
     vts.parameters["MouthSmile"]["value"] = 0.4
 
-    asyncio.create_task(blink(vts, movements["blink"]))
+    asyncio.create_task(blink_animation(vts, movements["blink"]))
+    asyncio.create_task(head_animation(vts))
 
-    """async for chunk in tts.infer("Hi, I'm Raine, your favorite Ay I veetuber!\nHello everyone, thanks for joining the stream today!\nIt really means a lot to me."):
-        sd.play(chunk["data"], chunk["sample_rate"])
+    async for chunk in tts.infer("""Yoh, now why might you be looking for me, hm?
+Oh, you didn't know? I'm the 77th Director of the Wangsheng Funeral Parlor, Hu Tao.
+Though by the looks of you... Radiant glow, healthy posture...
+Yes, you're definitely here for something other than that which falls within my regular line of work, aren't you?
+Wanna come over for tea?
+One client, two clients, three clients!
+When the sun's out, bathe in sunlight. But when the moon's out, bathe in moonlight~
+Lemme show you some fire tricks. First... Fire! And then... Whoosh! Fire butterfly! Be free!
+Run around all you like during the day, but you should be careful during the night.
+When I'm not around, best keep your wits about you.
+Fighting's a pain. For me, it's not an objective so much as a means to an end.
+Using the means to reach the end, to fight for that which I will not compromise on — it's in this way that you and I are the same."""):
+        #sd.play(chunk["data"], chunk["sample_rate"])
 
         for volume_level in chunk["volume_data"]:
             vts.parameters["MouthOpen"]["value"] = volume_level
@@ -95,15 +105,9 @@ async def main():
 
         vts.parameters["MouthOpen"]["value"] = 0
 
-        await asyncio.sleep(0.3)"""
+        await asyncio.sleep(0.3)
 
-    await move(vts, movements["sway"])
-
-    await move(vts, movements["nod"])
-
-    await move(vts, movements["shake"])
-
-    #await tts.close()
+    await tts.close()
     await vts.disconnect()
 
 

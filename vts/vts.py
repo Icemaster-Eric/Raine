@@ -8,7 +8,6 @@ import pyvts
 
 class VTS:
     def __init__(self):
-        self.connected: bool = False
         self.vts = pyvts.vts()
         self.hotkeys: list[dict[
             Literal["name", "type", "description", "file", "hotkeyID", "keyCombination", "onScreenButtonID"], str | int | list
@@ -40,8 +39,6 @@ class VTS:
 
         await self.vts.close()
 
-        self.connected = True
-
         asyncio.create_task(self.send_requests())
 
     async def disconnect(self):
@@ -50,8 +47,6 @@ class VTS:
 
         self.hotkeys: list = []
         self.parameters = {}
-
-        self.connected = False
 
     @asynccontextmanager
     async def vts_request(self):
@@ -98,7 +93,7 @@ class VTS:
         Stops when the connected property is set to False.
         """
         async with self.vts_request():
-            while self.connected:
+            while self.vts.get_connection_status():
                 while not self.request_queue.empty():
                     request = self.request_queue.get_nowait()
 
